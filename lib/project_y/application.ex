@@ -7,13 +7,13 @@ defmodule ProjectY.Application do
 
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: ProjectY.Worker.start_link(arg)
-      # {ProjectY.Worker, arg}
+      {Cluster.Supervisor,
+       [Application.get_env(:libcluster, :topologies), [name: ProjectY.ClusterSupervisor]]},
+      {DynamicSupervisor, strategy: :one_for_one, name: ProjectY.Supervisors.DecodeSession}
     ]
 
-    # See https://hexdocs.pm/elixir/Supervisor.html
-    # for other strategies and supported options
     opts = [strategy: :one_for_one, name: ProjectY.Supervisor]
+
     Supervisor.start_link(children, opts)
   end
 end

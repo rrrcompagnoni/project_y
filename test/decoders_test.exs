@@ -6,13 +6,72 @@ defmodule ProjectY.DecodersTest do
     Decoders.MorseSignal
   }
 
+  test "a Morse Code decode session" do
+    {:ok, signal_1} = Decoders.decode_morse_signal("....")
+    {:ok, signal_2} = Decoders.decode_morse_signal(".")
+    {:ok, signal_3} = Decoders.decode_morse_signal(".-..")
+    {:ok, signal_4} = Decoders.decode_morse_signal(".--.")
+
+    :ok = Decoders.new_session(:morse, "123")
+
+    :ok = Decoders.send_signal_to_session("123", signal_1)
+    :ok = Decoders.send_signal_to_session("123", signal_2)
+    :ok = Decoders.send_signal_to_session("123", signal_3)
+    :ok = Decoders.send_signal_to_session("123", signal_4)
+
+    assert "HELP" = Decoders.decode_session_message!(:morse, "123")
+
+    :ok = Decoders.close_session(:morse, "123")
+
+    assert :session_not_found = Decoders.send_signal_to_session("123", signal_1)
+    assert :session_not_found = Decoders.decode_session_message!(:morse, "123")
+  end
+
+  describe "new_session/2" do
+    test "the attempt to duplicate a Morse decode session" do
+      assert :ok = Decoders.new_session(:morse, "123")
+
+      assert :already_started = Decoders.new_session(:morse, "123")
+
+      :ok = Decoders.close_session(:morse, "123")
+    end
+  end
+
+  describe "close_session/2" do
+    test "the attempt to close a Morse decode session already closed" do
+      :ok = Decoders.new_session(:morse, "123")
+
+      :ok = Decoders.close_session(:morse, "123")
+
+      assert :session_not_found = Decoders.close_session(:morse, "123")
+    end
+  end
+
   describe "decode_morse_signal/1" do
     test "with a valid Morse signal" do
       assert {:ok, %MorseSignal{encoded: ".", decoded: "E"}} = Decoders.decode_morse_signal(".")
     end
 
     test "with an invalid Morse signal" do
-      assert {:error, :the_signal_is_not_valid} = Decoders.decode_morse_signal("X")
+      assert {:error, :invalid_signal} = Decoders.decode_morse_signal("X")
+    end
+  end
+
+  describe "decode_message/1" do
+    test "signals responding to decoded field" do
+      {:ok, signal_1} = Decoders.decode_morse_signal("....")
+      {:ok, signal_2} = Decoders.decode_morse_signal(".")
+      {:ok, signal_3} = Decoders.decode_morse_signal(".-..")
+      {:ok, signal_4} = Decoders.decode_morse_signal(".--.")
+      signals = [signal_1, signal_2, signal_3, signal_4]
+
+      assert Decoders.decode_message!(signals) == "HELP"
+    end
+
+    test "signals missing decoded field" do
+      assert_raise ArgumentError, fn ->
+        Decoders.decode_message!(["x"])
+      end
     end
   end
 end

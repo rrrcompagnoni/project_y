@@ -10,9 +10,10 @@ defmodule ProjectY do
   end
 
   @spec send_morse_signal(String.t(), String.t()) :: :invalid_signal | :ok | :session_not_found
-  def send_morse_signal(session_code, raw_signal) when is_binary(session_code) and is_binary(raw_signal) do
+  def send_morse_signal(session_code, raw_signal)
+      when is_binary(session_code) and is_binary(raw_signal) do
     with {:ok, signal} <- ProjectY.Decoders.decode_morse_signal(raw_signal),
-      :ok <- ProjectY.Decoders.send_signal_to_session(session_code, signal) do
+         :ok <- ProjectY.Decoders.send_signal_to_session(session_code, signal) do
       :ok
     else
       :session_not_found -> :session_not_found

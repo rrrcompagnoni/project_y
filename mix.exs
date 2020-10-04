@@ -14,7 +14,7 @@ defmodule ProjectY.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :plug_cowboy],
       mod: {ProjectY.Application, []}
     ]
   end
@@ -22,8 +22,10 @@ defmodule ProjectY.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:elixir_uuid, "~> 1.2"},
       {:swarm, "~> 3.0"},
-      {:libcluster, "~> 3.2.1"}
+      {:libcluster, "~> 3.2.1"},
+      {:plug_cowboy, "~> 2.0"}
     ]
   end
 end

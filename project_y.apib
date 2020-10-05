@@ -1,0 +1,61 @@
+FORMAT: 1A
+HOST: http://localhost
+
+# PROJECT Y API
+Welcome to the **PROJECT Y** API. This API provides access to the **PROJECT Y** service.
+
+# Group Sessions
+Resources in this group are related to **Morse Code** sessions.
+
+# Morse Session [/new]
+Sessions will be alive for five minutes before shutting down.
+
+## Create decode session [POST]
+
++ Request JSON
+
+    + Headers
+
+            Content-Type: application/json
+
++ Response 201 (application/json)
+
+        {"id": "f98b92b3-14c0-414a-a326-f6e5c1d48882"}
+
+# Session Decode [/decode/{session_code}]
+
++ Parameters
+
+    + session_code: "f98b92b3-14c0-414a-a326-f6e5c1d48882" (string) - An unique identifier of the session.
+
+## Send signal to decode session [PUT]
+
++ Request JSON
+
+    + Headers
+
+            Content-Type: application/json
+
+    + Body
+
+            { "code": "." }
+
++ Response 202 (application/json)
+
++ Response 400 (application/json)
+
++ Response 404 (application/json)
+
+## Decode the session message [GET]
+
++ Request JSON
+
+    + Headers
+
+            Content-Type: application/json
+
++ Response 201 (application/json)
+
+        {"code": "MESSAGE"}
+
++ Response 404 (application/json)

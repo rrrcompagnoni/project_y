@@ -6,6 +6,9 @@ defmodule ProjectY do
     ProjectY.Decoders.cast_session(:morse, session_code)
   end
 
+  @doc """
+  Sessions are automatic stopped after 5 minutes.
+  """
   @spec start_session(MorseSession.t()) :: :already_started | :ok
   def start_session(%MorseSession{} = session) do
     ProjectY.Decoders.start_session(session)

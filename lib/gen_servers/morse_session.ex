@@ -2,7 +2,6 @@ defmodule ProjectY.GenServers.MorseSession do
   use GenServer
 
   alias ProjectY.{
-    Decoders,
     Decoders.MorseSignal
   }
 
@@ -25,7 +24,7 @@ defmodule ProjectY.GenServers.MorseSession do
 
   @impl true
   def init(session_code) do
-    Process.send_after(self(), {:close_session, session_code}, 300_000)
+    Process.send_after(self(), {:stop_session, session_code}, 300_000)
 
     {:ok, []}
   end
@@ -35,7 +34,7 @@ defmodule ProjectY.GenServers.MorseSession do
     message =
       signals
       |> Enum.reverse()
-      |> Decoders.decode_message!()
+      |> ProjectY.decode_message!()
 
     {:reply, message, signals}
   end
@@ -66,8 +65,10 @@ defmodule ProjectY.GenServers.MorseSession do
   end
 
   @impl true
-  def handle_info({:close_session, session_code}, state) do
-    Decoders.close_session(:morse, session_code)
+  def handle_info({:stop_session, session_code}, state) do
+    session_code
+    |> ProjectY.cast_morse_session()
+    |> ProjectY.stop_session()
 
     {:noreply, state}
   end

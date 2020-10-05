@@ -7,68 +7,74 @@ defmodule ProjectY.DecodersTest do
   }
 
   test "a Morse Code decode session" do
-    session_code = UUID.uuid4()
+    session = Decoders.cast_session(:morse, UUID.uuid4())
 
-    {:ok, signal_1} = Decoders.decode_morse_signal("....")
-    {:ok, signal_2} = Decoders.decode_morse_signal(".")
-    {:ok, signal_3} = Decoders.decode_morse_signal(".-..")
-    {:ok, signal_4} = Decoders.decode_morse_signal(".--.")
+    {:ok, signal_1} = Decoders.decode_raw_signal(session, "....")
+    {:ok, signal_2} = Decoders.decode_raw_signal(session, ".")
+    {:ok, signal_3} = Decoders.decode_raw_signal(session, ".-..")
+    {:ok, signal_4} = Decoders.decode_raw_signal(session, ".--.")
 
-    :ok = Decoders.new_session(:morse, session_code)
+    :ok = Decoders.start_session(session)
 
-    :ok = Decoders.send_signal_to_session(session_code, signal_1)
-    :ok = Decoders.send_signal_to_session(session_code, signal_2)
-    :ok = Decoders.send_signal_to_session(session_code, signal_3)
-    :ok = Decoders.send_signal_to_session(session_code, signal_4)
+    :ok = Decoders.send_signal(session, signal_1)
+    :ok = Decoders.send_signal(session, signal_2)
+    :ok = Decoders.send_signal(session, signal_3)
+    :ok = Decoders.send_signal(session, signal_4)
 
-    assert "HELP" = Decoders.decode_session_message!(:morse, session_code)
+    assert "HELP" = Decoders.decode_session_message!(session)
 
-    :ok = Decoders.close_session(:morse, session_code)
+    :ok = Decoders.stop_session(session)
 
-    assert :session_not_found = Decoders.send_signal_to_session(session_code, signal_1)
-    assert :session_not_found = Decoders.decode_session_message!(:morse, session_code)
+    assert :session_not_found = Decoders.send_signal(session, signal_1)
+    assert :session_not_found = Decoders.decode_session_message!(session)
   end
 
-  describe "new_session/2" do
+  describe "start_session/1" do
     test "the attempt to duplicate a Morse decode session" do
-      session_code = UUID.uuid4()
+      session = Decoders.cast_session(:morse, UUID.uuid4())
 
-      assert :ok = Decoders.new_session(:morse, session_code)
+      assert :ok = Decoders.start_session(session)
 
-      assert :already_started = Decoders.new_session(:morse, session_code)
+      assert :already_started = Decoders.start_session(session)
 
-      :ok = Decoders.close_session(:morse, session_code)
+      :ok = Decoders.stop_session(session)
     end
   end
 
-  describe "close_session/2" do
-    test "the attempt to close a Morse decode session already closed" do
-      session_code = UUID.uuid4()
+  describe "stop_session/1" do
+    test "the attempt to stop a Morse decode session already closed" do
+      session = Decoders.cast_session(:morse, UUID.uuid4())
 
-      :ok = Decoders.new_session(:morse, session_code)
+      :ok = Decoders.start_session(session)
 
-      :ok = Decoders.close_session(:morse, session_code)
+      :ok = Decoders.stop_session(session)
 
-      assert :session_not_found = Decoders.close_session(:morse, session_code)
+      assert :session_not_found = Decoders.stop_session(session)
     end
   end
 
-  describe "decode_morse_signal/1" do
+  describe "decode_raw_signal/2" do
     test "with a valid Morse signal" do
-      assert {:ok, %MorseSignal{encoded: ".", decoded: "E"}} = Decoders.decode_morse_signal(".")
+      session = Decoders.cast_session(:morse, "")
+
+      assert {:ok, %MorseSignal{encoded: ".", decoded: "E"}} =
+               Decoders.decode_raw_signal(session, ".")
     end
 
     test "with an invalid Morse signal" do
-      assert {:error, :invalid_signal} = Decoders.decode_morse_signal("X")
+      session = Decoders.cast_session(:morse, "")
+
+      assert {:error, :invalid_signal} = Decoders.decode_raw_signal(session, "X")
     end
   end
 
   describe "decode_message!/1" do
     test "signals responding to decoded field" do
-      {:ok, signal_1} = Decoders.decode_morse_signal("....")
-      {:ok, signal_2} = Decoders.decode_morse_signal(".")
-      {:ok, signal_3} = Decoders.decode_morse_signal(".-..")
-      {:ok, signal_4} = Decoders.decode_morse_signal(".--.")
+      session = Decoders.cast_session(:morse, "")
+      {:ok, signal_1} = Decoders.decode_raw_signal(session, "....")
+      {:ok, signal_2} = Decoders.decode_raw_signal(session, ".")
+      {:ok, signal_3} = Decoders.decode_raw_signal(session, ".-..")
+      {:ok, signal_4} = Decoders.decode_raw_signal(session, ".--.")
       signals = [signal_1, signal_2, signal_3, signal_4]
 
       assert Decoders.decode_message!(signals) == "HELP"
